@@ -10,11 +10,55 @@ let currentMode = 'all'; // 'all' | 'online' | 'offline'
 let currentType = 'all'; // 'all' | 'apk' | 'website'
 let searchQuery = '';
 
+// In-memory catalog list with fallback support
+let catalogData = (typeof PROJECTS_DATA !== 'undefined' && Array.isArray(PROJECTS_DATA) && PROJECTS_DATA.length > 0)
+  ? [...PROJECTS_DATA]
+  : ((typeof window !== 'undefined' && Array.isArray(window.PROJECTS_DATA) && window.PROJECTS_DATA.length > 0) ? [...window.PROJECTS_DATA] : []);
+
+/**
+ * Ensures catalog data is loaded from memory or via relative fetch
+ */
+export async function ensureCatalogData() {
+  if (catalogData && catalogData.length > 0) {
+    return catalogData;
+  }
+
+  // 1. Try fetching from relative path ./apps.json
+  try {
+    const res = await fetch('./apps.json');
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data) && data.length > 0) {
+        catalogData = data;
+        return catalogData;
+      }
+    }
+  } catch (e) {
+    // try products.json next
+  }
+
+  // 2. Try fetching from relative path ./products.json
+  try {
+    const res2 = await fetch('./products.json');
+    if (res2.ok) {
+      const data2 = await res2.json();
+      if (Array.isArray(data2) && data2.length > 0) {
+        catalogData = data2;
+        return catalogData;
+      }
+    }
+  } catch (e2) {
+    console.warn('Could not load products data from relative path ./products.json', e2);
+  }
+
+  return catalogData;
+}
+
 /**
  * Filter projects based on currentMode, currentType, and searchQuery
  */
 export function getFilteredProjects() {
-  return PROJECTS_DATA.filter((project) => {
+  return catalogData.filter((project) => {
     // 1. Mode condition
     const modeMatches = currentMode === 'all' || project.mode === currentMode;
 
@@ -48,7 +92,7 @@ export function renderGrid() {
   // Update Dynamic Counter Badge
   const counterEl = document.getElementById('productCounter');
   if (counterEl) {
-    counterEl.innerHTML = `Showing <span class="counter-count-bold">${filtered.length}</span> of ${PROJECTS_DATA.length} products`;
+    counterEl.innerHTML = `Showing <span class="counter-count-bold">${filtered.length}</span> of ${catalogData.length} products`;
   }
 
   // Handle Empty State
@@ -266,7 +310,7 @@ function renderCardMarkup(item) {
   return `
     <article class="app-card h-full flex flex-col justify-between" id="card-${item.id}">
       <!-- Clickable Card Body leading to detail page -->
-      <a href="detail.html?id=${item.id}" class="card-click-area block cursor-pointer flex-1" aria-label="View details for ${escapeHtml(item.title)}">
+      <a href="./detail.html?id=${item.id}" class="card-click-area block cursor-pointer flex-1" aria-label="View details for ${escapeHtml(item.title)}">
         <!-- 1. Mobile Launcher Tile View (< 768px) -->
         <div class="card-mobile-view">
           <div class="card-mobile-top">
@@ -409,7 +453,9 @@ function escapeHtml(str) {
 /**
  * Initialize Portal and wire event handlers
  */
-export function initPortal() {
+export async function initPortal() {
+  await ensureCatalogData();
+
   // 1. Wire Operational Mode Switcher
   const modeBar = document.getElementById('modeFilterBar');
   if (modeBar) {
@@ -469,13 +515,14 @@ if (typeof window !== 'undefined') {
     initPortal,
     resetFilters,
     renderGrid,
+    ensureCatalogData,
     setMode: (m) => { currentMode = m; updateButtonStates(); renderGrid(); },
     setType: (t) => { currentType = t; updateButtonStates(); renderGrid(); }
   };
 
   // Run automatically when DOM is ready
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initPortal);
+    document.addEventListener('DOMContentLoaded', () => { initPortal(); });
   } else {
     initPortal();
   }

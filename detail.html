@@ -1,25 +1,27 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title id="pageTitle">Software Details // TarkStudio</title>
     <meta name="description" content="TarkStudio Product Details - Software specifications, offline capabilities, and direct download." />
+    <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/brijeshdhiman137-eng/tarkstudio-log.png/main/1000349515__2_-removebg-preview.png" />
     
     <!-- Design Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 
-    <!-- Shared Stylesheet -->
-    <link rel="stylesheet" href="style.css" />
+    <!-- Tailwind CDN & Shared Stylesheet -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="./style.css" />
   </head>
-  <body class="tark-theme">
+  <body class="dark bg-slate-950 text-slate-100 tark-theme">
     <div class="portal-root min-h-screen flex flex-col justify-between">
       <!-- Top Navbar -->
       <header class="navbar">
         <div class="navbar-inner">
-          <a href="index.html" class="navbar-brand" aria-label="TarkStudio Home">
+          <a href="./index.html" class="navbar-brand" aria-label="TarkStudio Home">
             <img 
               src="https://raw.githubusercontent.com/brijeshdhiman137-eng/tarkstudio-log.png/main/1000349515__2_-removebg-preview.png" 
               alt="TarkStudio" 
@@ -30,7 +32,7 @@
           </a>
 
           <div>
-            <a href="index.html" class="btn-back-hub" aria-label="Back to software hub">
+            <a href="./index.html" class="btn-back-hub" aria-label="Back to software hub">
               <span>← Back to Hub</span>
             </a>
           </div>
@@ -120,17 +122,40 @@
         return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 2rem; height: 2rem; color: #2dd4bf;"><circle cx="12" cy="12" r="10"/><polygon points="12 6 12 12 16 14"/></svg>`;
       }
 
-      function initDetail() {
+      async function initDetail() {
         const urlParams = new URLSearchParams(window.location.search);
         const productId = urlParams.get('id');
         const container = document.getElementById('detailContainer');
 
-        const catalog = (typeof PROJECTS_DATA !== 'undefined' && Array.isArray(PROJECTS_DATA))
+        let catalog = (typeof PROJECTS_DATA !== 'undefined' && Array.isArray(PROJECTS_DATA) && PROJECTS_DATA.length > 0)
           ? PROJECTS_DATA
-          : (window.PROJECTS_DATA || []);
+          : ((typeof window !== 'undefined' && Array.isArray(window.PROJECTS_DATA) && window.PROJECTS_DATA.length > 0) ? window.PROJECTS_DATA : []);
 
-        if (!catalog.length) {
-          container.innerHTML = `<div style="text-align: center; padding: 4rem 1rem;"><h2 style="color: #f87171; font-size: 1.5rem; margin-bottom: 1rem;">Data Error</h2><p style="color: #94a3b8;">Unable to access project catalog.</p><a href="index.html" class="action-btn btn-web-open" style="display: inline-block; margin-top: 1rem; width: auto; padding: 0.5rem 1.25rem;">Return to Hub</a></div>`;
+        if (!catalog || !catalog.length) {
+          try {
+            const res = await fetch('./apps.json');
+            if (res.ok) {
+              const data = await res.json();
+              if (Array.isArray(data) && data.length > 0) catalog = data;
+            }
+          } catch (e) {
+            // try products.json
+          }
+          if (!catalog || !catalog.length) {
+            try {
+              const res2 = await fetch('./products.json');
+              if (res2.ok) {
+                const data2 = await res2.json();
+                if (Array.isArray(data2) && data2.length > 0) catalog = data2;
+              }
+            } catch (e2) {
+              console.warn('Unable to load catalog from ./products.json', e2);
+            }
+          }
+        }
+
+        if (!catalog || !catalog.length) {
+          container.innerHTML = `<div style="text-align: center; padding: 4rem 1rem;"><h2 style="color: #f87171; font-size: 1.5rem; margin-bottom: 1rem;">Data Error</h2><p style="color: #94a3b8;">Unable to access project catalog.</p><a href="./index.html" class="action-btn btn-web-open" style="display: inline-block; margin-top: 1rem; width: auto; padding: 0.5rem 1.25rem;">Return to Hub</a></div>`;
           return;
         }
 
@@ -143,7 +168,7 @@
               <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">🔍</div>
               <h1 style="font-size: 1.35rem; font-weight: 700; color: #f8fafc; margin-bottom: 0.5rem;">Product Not Found</h1>
               <p style="color: #94a3b8; font-size: 0.875rem; margin-bottom: 1.25rem;">The requested software identifier "${escapeHtml(productId || 'unknown')}" does not exist in the active catalog.</p>
-              <a href="index.html" class="btn-back-hub" style="display: inline-flex; align-items: center; justify-content: center; margin: 0 auto; padding: 0.45rem 1rem;">← Back to Software Hub</a>
+              <a href="./index.html" class="btn-back-hub" style="display: inline-flex; align-items: center; justify-content: center; margin: 0 auto; padding: 0.45rem 1rem;">← Back to Software Hub</a>
             </div>
           `;
           return;
@@ -213,13 +238,13 @@
         container.innerHTML = `
           <!-- Top Breadcrumb & Left-Aligned Back Pill Row -->
           <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.6rem; margin-bottom: 1rem; width: 100%;">
-            <a href="index.html" class="btn-back-hub" style="display: inline-flex; align-items: center; gap: 0.35rem; width: auto; align-self: flex-start; margin-right: auto; text-decoration: none;">
+            <a href="./index.html" class="btn-back-hub" style="display: inline-flex; align-items: center; gap: 0.35rem; width: auto; align-self: flex-start; margin-right: auto; text-decoration: none;">
               <span>← Back to Hub</span>
             </a>
 
             <!-- Breadcrumb with small compact text (text-xs) & flex-wrap -->
             <nav style="display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem; font-size: 0.75rem; color: #94a3b8;">
-              <a href="index.html" style="color: #14b8a6; text-decoration: none;">Software Hub</a>
+              <a href="./index.html" style="color: #14b8a6; text-decoration: none;">Software Hub</a>
               <span style="color: #475569;">/</span>
               <span style="color: #64748b;">${escapeHtml(item.category || item.type)}</span>
               <span style="color: #475569;">/</span>
