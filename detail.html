@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title id="pageTitle">Software Details // TarkStudio</title>
+    <meta name="description" content="TarkStudio Product Details - Software specifications, offline capabilities, and direct download." />
+    
+    <!-- Design Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+    <!-- Shared Stylesheet -->
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body class="tark-theme">
+    <div class="portal-root min-h-screen flex flex-col justify-between">
+      <!-- Top Navbar -->
+      <header class="navbar">
+        <div class="navbar-inner">
+          <a href="index.html" class="navbar-brand" aria-label="TarkStudio Home">
+            <img 
+              src="https://raw.githubusercontent.com/brijeshdhiman137-eng/tarkstudio-log.png/main/1000349515__2_-removebg-preview.png" 
+              alt="TarkStudio" 
+              class="navbar-logo-img"
+              referrerpolicy="no-referrer"
+            />
+            <span class="navbar-title">TarkStudio</span>
+          </a>
+
+          <div>
+            <a href="index.html" class="btn-back-hub" aria-label="Back to software hub">
+              <span>← Back to Hub</span>
+            </a>
+          </div>
+        </div>
+      </header>
+
+      <!-- Main Detail Container -->
+      <main class="portal-main px-3 sm:px-6 py-4 sm:py-6 max-w-5xl mx-auto w-full" id="detailContainer">
+        <!-- Dynamic content rendered by script below -->
+        <div id="detailLoading" style="text-align: center; padding: 4rem 1rem; color: #94a3b8;">
+          <p>Loading application specifications...</p>
+        </div>
+      </main>
+
+      <!-- Footer -->
+      <footer class="portal-footer">
+        <div class="footer-inner">
+          <div class="footer-brand">
+            <img src="https://raw.githubusercontent.com/brijeshdhiman137-eng/tarkstudio-log.png/main/1000349515__2_-removebg-preview.png" alt="TarkStudio" style="height: 24px; width: auto; object-fit: contain; background: transparent;" referrerpolicy="no-referrer" />
+            <span>TarkStudio // Client-Side Repository</span>
+          </div>
+          <div class="footer-copy">
+            <span>Client-side distribution • Air-gapped verified</span>
+          </div>
+        </div>
+      </footer>
+    </div>
+
+    <!-- Notification Toast Container -->
+    <div id="toastContainer" class="toast-container" aria-live="polite"></div>
+
+    <!-- Detail Rendering Logic (ES Module) -->
+    <script type="module">
+      import { PROJECTS_DATA } from './projects-data.js';
+
+      function escapeHtml(str) {
+        if (!str) return '';
+        return String(str)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#039;');
+      }
+
+      function showToast(message) {
+        const container = document.getElementById('toastContainer');
+        if (!container) return;
+        const toast = document.createElement('div');
+        toast.className = 'tark-toast';
+        toast.innerHTML = `<span>✓</span> <span>${escapeHtml(message)}</span>`;
+        container.appendChild(toast);
+        setTimeout(() => toast.classList.add('show'), 10);
+        setTimeout(() => {
+          toast.classList.remove('show');
+          setTimeout(() => toast.remove(), 250);
+        }, 3200);
+      }
+      // Attach to window so inline onclick handlers can access it
+      window.showToast = showToast;
+
+      function getProjectIcon(id) {
+        if (id === 'storeready') {
+          return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 2rem; height: 2rem; color: #2dd4bf;"><path d="m16.5 9.4-9-5.19M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.29 7 12 12 20.71 7"/><line x1="12" y1="22" x2="12" y2="12"/></svg>`;
+        }
+        if (id === 'flashdrop') {
+          return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 2rem; height: 2rem; color: #fbbf24;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>`;
+        }
+        if (id === 'chota-hathi') {
+          return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 2rem; height: 2rem; color: #38bdf8;"><rect width="20" height="12" x="2" y="6" rx="6"/><line x1="6" x2="10" y1="12" y2="12"/><line x1="8" x2="8" y1="10" y2="14"/><line x1="15" x2="15.01" y1="13" y2="13"/><line x1="18" x2="18.01" y1="11" y2="11"/></svg>`;
+        }
+        if (id === 'mental-math-academy') {
+          return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 2rem; height: 2rem; color: #c084fc;"><rect width="16" height="20" x="4" y="2" rx="2"/><line x1="8" x2="16" y1="6" y2="6"/><line x1="16" x2="16" y1="14" y2="18"/><path d="M16 10h.01"/><path d="M12 10h.01"/><path d="M8 10h.01"/><path d="M12 14h.01"/><path d="M8 14h.01"/><path d="M12 18h.01"/><path d="M8 18h.01"/></svg>`;
+        }
+        if (id === 'bagh-chal') {
+          return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 2rem; height: 2rem; color: #34d399;"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/><path d="M9 3v18"/><path d="M15 3v18"/></svg>`;
+        }
+        if (id === 'apex-monitor') {
+          return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 2rem; height: 2rem; color: #22d3ee;"><path d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.48 12H2"/></svg>`;
+        }
+        if (id === 'omni-relay-client') {
+          return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 2rem; height: 2rem; color: #818cf8;"><rect x="16" y="16" width="6" height="6" rx="1"/><rect x="2" y="16" width="6" height="6" rx="1"/><rect x="9" y="2" width="6" height="6" rx="1"/><path d="M5 16v-3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3"/><path d="M12 12V8"/></svg>`
+        }
+        if (id === 'tark-vault-sync') {
+          return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 2rem; height: 2rem; color: #fb7185;"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><rect width="8" height="5" x="8" y="11" rx="1"/><path d="M10 11V9a2 2 0 1 1 4 0v2"/></svg>`
+        }
+        return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 2rem; height: 2rem; color: #2dd4bf;"><circle cx="12" cy="12" r="10"/><polygon points="12 6 12 12 16 14"/></svg>`;
+      }
+
+      function initDetail() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const productId = urlParams.get('id');
+        const container = document.getElementById('detailContainer');
+
+        const catalog = (typeof PROJECTS_DATA !== 'undefined' && Array.isArray(PROJECTS_DATA))
+          ? PROJECTS_DATA
+          : (window.PROJECTS_DATA || []);
+
+        if (!catalog.length) {
+          container.innerHTML = `<div style="text-align: center; padding: 4rem 1rem;"><h2 style="color: #f87171; font-size: 1.5rem; margin-bottom: 1rem;">Data Error</h2><p style="color: #94a3b8;">Unable to access project catalog.</p><a href="index.html" class="action-btn btn-web-open" style="display: inline-block; margin-top: 1rem; width: auto; padding: 0.5rem 1.25rem;">Return to Hub</a></div>`;
+          return;
+        }
+
+        const item = catalog.find(p => p.id === productId);
+
+        if (!item) {
+          document.getElementById('pageTitle').textContent = 'Product Not Found // TarkStudio';
+          container.innerHTML = `
+            <div class="detail-product-card" style="text-align: center; max-width: 540px; margin: 2rem auto; padding: 2.5rem 1.25rem;">
+              <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">🔍</div>
+              <h1 style="font-size: 1.35rem; font-weight: 700; color: #f8fafc; margin-bottom: 0.5rem;">Product Not Found</h1>
+              <p style="color: #94a3b8; font-size: 0.875rem; margin-bottom: 1.25rem;">The requested software identifier "${escapeHtml(productId || 'unknown')}" does not exist in the active catalog.</p>
+              <a href="index.html" class="btn-back-hub" style="display: inline-flex; align-items: center; justify-content: center; margin: 0 auto; padding: 0.45rem 1rem;">← Back to Software Hub</a>
+            </div>
+          `;
+          return;
+        }
+
+        // Update Page Title
+        document.getElementById('pageTitle').textContent = `${item.title} // TarkStudio Details`;
+
+        const isLocked = item.status === 'locked';
+        const hasApk = Boolean(item.apkUrl) || item.type === 'apk';
+        const hasWeb = Boolean(item.webUrl) || item.type === 'website';
+        const iconSvg = getProjectIcon(item.id);
+
+        let modeBadge = '';
+        if (item.mode === 'offline') {
+          modeBadge = `<span class="badge badge-mode-offline" style="font-size: 0.75rem; padding: 0.2rem 0.55rem; white-space: nowrap;">⚡ Offline / Local</span>`;
+        } else if (item.mode === 'online') {
+          modeBadge = `<span class="badge badge-mode-online" style="font-size: 0.75rem; padding: 0.2rem 0.55rem; white-space: nowrap;">🟢 Online Cloud</span>`;
+        } else {
+          modeBadge = `<span class="badge badge-mode-online" style="font-size: 0.75rem; padding: 0.2rem 0.55rem; white-space: nowrap;">🔄 Hybrid</span>`;
+        }
+
+        let typeBadge = `<span class="badge badge-type" style="font-size: 0.75rem; padding: 0.2rem 0.55rem; white-space: nowrap;">${item.type === 'apk' ? '📱 Android APK' : '💻 Web Tool'}</span>`;
+        let customBadge = item.badge ? `<span class="badge badge-custom" style="font-size: 0.75rem; padding: 0.2rem 0.55rem; white-space: nowrap;">${escapeHtml(item.badge)}</span>` : '';
+        let lockedBadge = isLocked ? `<span class="badge badge-locked" style="font-size: 0.75rem; padding: 0.2rem 0.55rem; white-space: nowrap;">🔒 Locked - Coming Soon</span>` : '';
+
+        // Build Action Buttons
+        let actionsHtml = '';
+        if (isLocked) {
+          actionsHtml = `
+            <button class="action-btn btn-locked" disabled style="opacity: 0.6; cursor: not-allowed; padding: 0.5rem 1rem; font-size: 0.8125rem; width: auto; min-width: 200px;">
+              <span>🔒 Private Staging - Coming Soon</span>
+            </button>
+          `;
+        } else {
+          const btns = [];
+          if (hasApk && item.apkUrl) {
+            btns.push(`
+              <a 
+                href="${item.apkUrl}" 
+                class="action-btn btn-apk-download" 
+                download="${item.apkUrl.split('/').pop() || 'release.apk'}"
+                onclick="showToast('Starting direct APK download: ${escapeHtml(item.title)}')"
+                style="padding: 0.55rem 1.15rem; font-size: 0.8125rem; width: auto; flex: 1 1 auto; max-width: 280px; justify-content: center;"
+              >
+                <span>⬇ Download APK (${escapeHtml(item.size || 'Release')})</span>
+              </a>
+            `);
+          }
+          if (hasWeb && item.webUrl) {
+            btns.push(`
+              <a 
+                href="${item.webUrl}" 
+                class="action-btn btn-web-open" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                onclick="showToast('Launching tool: ${escapeHtml(item.title)}')"
+                style="padding: 0.55rem 1.15rem; font-size: 0.8125rem; width: auto; flex: 1 1 auto; max-width: 280px; justify-content: center;"
+              >
+                <span>🌐 Launch Tool ↗</span>
+              </a>
+            `);
+          }
+          actionsHtml = `<div style="display: flex; flex-wrap: wrap; gap: 0.5rem; width: 100%;">${btns.join('')}</div>`;
+        }
+
+        container.innerHTML = `
+          <!-- Top Breadcrumb & Left-Aligned Back Pill Row -->
+          <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.6rem; margin-bottom: 1rem; width: 100%;">
+            <a href="index.html" class="btn-back-hub" style="display: inline-flex; align-items: center; gap: 0.35rem; width: auto; align-self: flex-start; margin-right: auto; text-decoration: none;">
+              <span>← Back to Hub</span>
+            </a>
+
+            <!-- Breadcrumb with small compact text (text-xs) & flex-wrap -->
+            <nav style="display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem; font-size: 0.75rem; color: #94a3b8;">
+              <a href="index.html" style="color: #14b8a6; text-decoration: none;">Software Hub</a>
+              <span style="color: #475569;">/</span>
+              <span style="color: #64748b;">${escapeHtml(item.category || item.type)}</span>
+              <span style="color: #475569;">/</span>
+              <span style="color: #f8fafc; font-weight: 600;">${escapeHtml(item.title)}</span>
+            </nav>
+          </div>
+
+          <!-- Main Product Card -->
+          <div class="detail-product-card">
+            <div style="display: flex; flex-direction: column; gap: 1rem;">
+              <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap;">
+                <div style="display: flex; align-items: center; gap: 0.75rem; min-width: 0; flex: 1;">
+                  <div style="width: 2.75rem; height: 2.75rem; border-radius: 10px; background: rgba(20, 184, 166, 0.12); border: 1px solid rgba(20, 184, 166, 0.25); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                    ${iconSvg}
+                  </div>
+                  <div style="min-width: 0;">
+                    <div style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--accent-teal); margin-bottom: 0.15rem;">
+                      ${escapeHtml(item.category || item.type)}
+                    </div>
+                    <h1 style="font-size: 1.35rem; font-weight: 800; color: #f8fafc; line-height: 1.25; word-break: break-word;">
+                      ${escapeHtml(item.title)}
+                    </h1>
+                  </div>
+                </div>
+
+                <div style="display: flex; align-items: center; gap: 0.5rem; flex-shrink: 0;">
+                  <span class="card-version" style="font-size: 0.75rem; padding: 0.2rem 0.55rem;">
+                    ${escapeHtml(item.version)}
+                  </span>
+                </div>
+              </div>
+
+              <!-- Badges Row: flex-wrap, text-xs -->
+              <div style="display: flex; flex-wrap: wrap; gap: 0.35rem; align-items: center;">
+                ${modeBadge}
+                ${typeBadge}
+                ${customBadge}
+                ${lockedBadge}
+              </div>
+
+              <!-- Action Buttons -->
+              <div style="padding-top: 0.75rem; border-top: 1px solid var(--border-subtle);">
+                ${actionsHtml}
+              </div>
+            </div>
+          </div>
+
+          <!-- 2-Column Technical Specification Grid -->
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem;">
+            <!-- Left: Overview & Capabilities -->
+            <div class="detail-product-card" style="margin-bottom: 0;">
+              <h2 style="font-size: 1rem; font-weight: 700; color: #f8fafc; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.4rem;">
+                <span>📋 Overview & Details</span>
+              </h2>
+              <p style="color: #cbd5e1; font-size: 0.875rem; line-height: 1.6; margin-bottom: 1.25rem;">
+                ${escapeHtml(item.description)}
+              </p>
+
+              <h3 style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--accent-teal); margin-bottom: 0.5rem;">
+                🛡️ TarkStudio Guarantees
+              </h3>
+              <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.8125rem; color: #94a3b8;">
+                <li style="display: flex; align-items: center; gap: 0.4rem;">
+                  <span style="color: #2dd4bf;">✓</span> Direct client-side execution with zero trackers or analytics.
+                </li>
+                <li style="display: flex; align-items: center; gap: 0.4rem;">
+                  <span style="color: #2dd4bf;">✓</span> ${item.mode === 'offline' ? '100% air-gapped safe — requires zero telemetry or network server connection.' : 'Encrypted cloud interface for real-time synchronization.'}
+                </li>
+                <li style="display: flex; align-items: center; gap: 0.4rem;">
+                  <span style="color: #2dd4bf;">✓</span> SHA-256 package signature checked for deployment integrity.
+                </li>
+              </ul>
+            </div>
+
+            <!-- Right: Technical Specs -->
+            <div class="detail-product-card" style="margin-bottom: 0;">
+              <h2 style="font-size: 1rem; font-weight: 700; color: #f8fafc; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.4rem;">
+                <span>⚙️ System Specifications</span>
+              </h2>
+
+              <div style="display: flex; flex-direction: column; gap: 0.6rem; font-size: 0.8125rem;">
+                <div style="display: flex; justify-content: space-between; padding-bottom: 0.4rem; border-bottom: 1px solid rgba(255,255,255,0.06);">
+                  <span style="color: #94a3b8;">Identifier</span>
+                  <span style="font-family: var(--font-mono); color: #f8fafc;">${escapeHtml(item.id)}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding-bottom: 0.4rem; border-bottom: 1px solid rgba(255,255,255,0.06);">
+                  <span style="color: #94a3b8;">Software Version</span>
+                  <span style="font-family: var(--font-mono); color: #2dd4bf;">${escapeHtml(item.version)}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding-bottom: 0.4rem; border-bottom: 1px solid rgba(255,255,255,0.06);">
+                  <span style="color: #94a3b8;">Deployment Type</span>
+                  <span style="color: #f8fafc;">${item.type === 'apk' ? 'Android Package (APK)' : 'Web Application'}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding-bottom: 0.4rem; border-bottom: 1px solid rgba(255,255,255,0.06);">
+                  <span style="color: #94a3b8;">Operational Mode</span>
+                  <span style="color: ${item.mode === 'offline' ? '#fbbf24' : '#34d399'}; font-weight: 600;">
+                    ${item.mode === 'offline' ? '⚡ Offline (Zero Server)' : '🟢 Online Cloud'}
+                  </span>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding-bottom: 0.4rem; border-bottom: 1px solid rgba(255,255,255,0.06);">
+                  <span style="color: #94a3b8;">Binary / Bundle Size</span>
+                  <span style="font-family: var(--font-mono); color: #f8fafc;">${escapeHtml(item.size || 'Local bundle')}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding-bottom: 0.4rem;">
+                  <span style="color: #94a3b8;">Release Status</span>
+                  <span style="color: ${isLocked ? '#f87171' : '#34d399'}; font-weight: 600;">
+                    ${isLocked ? 'Staging / Closed' : 'Verified Stable'}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      // Initialize when DOM is loaded or immediately if already ready
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initDetail);
+      } else {
+        initDetail();
+      }
+    </script>
+  </body>
+</html>

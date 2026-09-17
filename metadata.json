@@ -1,0 +1,6 @@
+{
+  "name": "TarkStudio Portal",
+  "description": "TarkStudio software portal featuring a dual-level filtering system for Online vs. Offline operational modes and APK vs. Website category selectors.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
