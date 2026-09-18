@@ -1,6 +1,6 @@
 {
   "name": "TarkStudio Portal",
-  "description": "TarkStudio software portal featuring a dual-level filtering system for Online vs. Offline operational modes and APK vs. Website category selectors.",
+  "description": "Discover high-performance local-first Android APKs, air-gapped utilities, and zero-telemetry web tools. Download secure, privacy-first software directly.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

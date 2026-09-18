@@ -24,21 +24,39 @@ export function normalizeProjectItem(item) {
   if (!item) return null;
   const id = String(item.id || '').trim().toLowerCase();
 
-  // Intelligent local asset fallbacks if URLs are empty in the Google Sheet
-  let apkUrl = (item.apkUrl && String(item.apkUrl).trim()) || '';
-  let webUrl = (item.webUrl && String(item.webUrl).trim()) || '';
+  // Custom action Button 1 inputs: btn1_text and webUrl
+  let btn1_text = (item.btn1_text ?? item.btn1Text ?? item.btn_text ?? '').toString().trim();
+  let webUrl = (item.webUrl ?? item.web_url ?? item.website_url ?? '').toString().trim();
 
-  if (!apkUrl) {
-    if (id === 'bagh-chal' || id === 'baghchal') apkUrl = 'downloads/baghchal-release.apk';
-    else if (id === 'flashdrop') apkUrl = 'downloads/flashdrop-release.apk';
-    else if (id === 'chota-hathi') apkUrl = 'downloads/chotahathi-release.apk';
-    else if (id === 'mental-math-academy') apkUrl = 'downloads/mental-math-release.apk';
-  }
+  // Distribution action Button 2 inputs: apk_url, indus_url, playstore_url
+  let apk_url = (item.apk_url ?? item.apkUrl ?? item.apk ?? '').toString().trim();
+  let indus_url = (item.indus_url ?? item.indusUrl ?? item.indus ?? '').toString().trim();
+  let playstore_url = (item.playstore_url ?? item.playstoreUrl ?? item.play_store_url ?? item.playStoreUrl ?? '').toString().trim();
 
-  if (!webUrl) {
-    if (id === 'bagh-chal' || id === 'baghchal') webUrl = 'games/bagh-chal/index.html';
-    else if (id === 'storeready') webUrl = 'tools/storeready/index.html';
-    else if (id === 'apex-monitor') webUrl = 'https://apex.tarkstudio.dev';
+  // Local fallback mapping if URLs were empty
+  if (!apk_url && !indus_url && !playstore_url && !webUrl) {
+    if (id === 'bagh-chal' || id === 'baghchal') {
+      apk_url = 'downloads/baghchal-release.apk';
+      webUrl = 'games/bagh-chal/index.html';
+      btn1_text = btn1_text || 'Play Online';
+      indus_url = 'https://www.indusappstore.com/apps/com.tarkstudio.baghchal';
+      playstore_url = 'https://play.google.com/store/apps/details?id=com.tarkstudio.baghchal';
+    } else if (id === 'flashdrop') {
+      apk_url = 'downloads/flashdrop-release.apk';
+    } else if (id === 'chota-hathi') {
+      apk_url = 'downloads/chotahathi-release.apk';
+      indus_url = 'https://www.indusappstore.com/apps/com.tarkstudio.chotahathi';
+    } else if (id === 'mental-math-academy') {
+      playstore_url = 'https://play.google.com/store/apps/details?id=com.tarkstudio.mentalmath';
+    } else if (id === 'storeready') {
+      webUrl = 'tools/storeready/index.html';
+      btn1_text = btn1_text || 'Launch Suite';
+    } else if (id === 'apex-monitor') {
+      webUrl = 'https://apex.tarkstudio.dev';
+      btn1_text = btn1_text || 'Open Console';
+    } else if (id === 'omni-relay-client') {
+      indus_url = 'https://www.indusappstore.com/apps/com.tarkstudio.omnirelay';
+    }
   }
 
   return {
@@ -52,8 +70,12 @@ export function normalizeProjectItem(item) {
     description: item.description || '',
     badge: item.badge || '',
     size: item.size || (item.type === 'apk' ? 'APK Package' : 'Web App'),
+    btn1_text: btn1_text,
     webUrl: webUrl,
-    apkUrl: apkUrl
+    apk_url: apk_url,
+    apkUrl: apk_url, // backwards compatibility
+    indus_url: indus_url,
+    playstore_url: playstore_url
   };
 }
 
@@ -214,20 +236,55 @@ export function renderGrid() {
   // Render cards
   container.innerHTML = filtered.map((item) => renderCardMarkup(item)).join('');
 
-  // Attach interactive listeners for simulated downloads/launches
+  // Attach interactive listeners for hybrid action buttons
+  // 1. Button 1: Custom Action
+  container.querySelectorAll('[data-action-custom]').forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const title = btn.getAttribute('data-action-custom') || 'Tool';
+      const url = btn.getAttribute('data-url');
+      showToast(`Opening ${title}...`);
+    });
+  });
+
+  // 2. Button 2: Direct APK
   container.querySelectorAll('[data-action-apk]').forEach((btn) => {
     btn.addEventListener('click', (e) => {
-      const title = btn.getAttribute('data-action-apk');
+      e.stopPropagation();
+      const title = btn.getAttribute('data-action-apk') || 'Application';
       const url = btn.getAttribute('data-url');
       handleApkClick(e, title, url);
     });
   });
 
-  container.querySelectorAll('[data-action-web]').forEach((btn) => {
+  // 3. Button 2: Indus Appstore
+  container.querySelectorAll('[data-action-indus]').forEach((btn) => {
     btn.addEventListener('click', (e) => {
-      const title = btn.getAttribute('data-action-web');
-      const url = btn.getAttribute('data-url');
-      handleWebClick(e, title, url);
+      e.stopPropagation();
+      const title = btn.getAttribute('data-action-indus') || 'Application';
+      showToast(`Redirecting to Indus Appstore for ${title}...`);
+    });
+  });
+
+  // 4. Button 2: Google Play Store
+  container.querySelectorAll('[data-action-playstore]').forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const title = btn.getAttribute('data-action-playstore') || 'Application';
+      showToast(`Redirecting to Google Play Store for ${title}...`);
+    });
+  });
+
+  // 5. Button 2: Multiple Active Links -> "Official Store ▾" Trigger
+  container.querySelectorAll('[data-store-dropdown]').forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const appId = btn.getAttribute('data-store-dropdown');
+      const item = allProjects.find((p) => p.id === appId);
+      if (item) {
+        openDistributionModal(item);
+      }
     });
   });
 }
@@ -312,13 +369,339 @@ export function getProjectIcon(itemOrId) {
 }
 
 /**
+ * Render hybrid action buttons for app cards
+ * 1. Button 1 (Custom Action - Manual):
+ *    - Controlled by btn1_text and webUrl.
+ *    - Render Button 1 with the exact label provided in btn1_text and href pointing to webUrl.
+ *    - If either btn1_text or webUrl is empty, hide Button 1 completely so Button 2 takes appropriate layout width.
+ * 2. Button 2 (Distribution Action - Fully Automatic):
+ *    - Inspects three columns: apk_url, indus_url, playstore_url.
+ *    - Single Active Link:
+ *      * If only apk_url exists: Label = "Direct APK", direct download.
+ *      * If only indus_url exists: Label = "Indus Appstore", opens Indus link.
+ *      * If only playstore_url exists: Label = "Play Store", opens Play Store link.
+ *    - Multiple Active Links:
+ *      * Label = "Official Store ▾".
+ *      * Clicking triggers a clean dropdown/modal with active options only.
+ *    - If none exist, hide Button 2.
+ */
+export function renderCardActionButtons(item) {
+  const isLocked = item.status === 'locked';
+
+  if (isLocked) {
+    return `
+      <div class="single-action-row">
+        <button class="action-btn btn-locked" disabled aria-disabled="true">
+          <span class="btn-text-content">🔒 Coming Soon</span>
+        </button>
+      </div>
+    `;
+  }
+
+  // 1. Button 1 (Custom Action - Manual)
+  const hasButton1 = Boolean(item.btn1_text && String(item.btn1_text).trim() && item.webUrl && String(item.webUrl).trim());
+  let button1Markup = '';
+  if (hasButton1) {
+    const rawLabel = String(item.btn1_text).trim();
+    button1Markup = `
+      <a 
+        href="${escapeHtml(item.webUrl)}" 
+        class="action-btn btn-custom-action"
+        target="_blank"
+        rel="noopener noreferrer"
+        data-action-custom="${escapeHtml(item.title)}"
+        data-url="${escapeHtml(item.webUrl)}"
+        title="${escapeHtml(rawLabel)}"
+      >
+        <span class="btn-text-content">${escapeHtml(rawLabel)}</span>
+      </a>
+    `;
+  }
+
+  // 2. Button 2 (Distribution Action - Fully Automatic)
+  const distOptions = [];
+  const apk = (item.apk_url || item.apkUrl || '').trim();
+  const indus = (item.indus_url || item.indusUrl || '').trim();
+  const play = (item.playstore_url || item.playstoreUrl || '').trim();
+
+  if (apk) {
+    distOptions.push({
+      type: 'apk',
+      label: 'Direct APK',
+      title: 'Direct APK Download',
+      description: 'Air-gapped Android package file (.apk)',
+      badge: 'Direct Download',
+      url: apk,
+      isDownload: true
+    });
+  }
+  if (indus) {
+    distOptions.push({
+      type: 'indus',
+      label: 'Indus Appstore',
+      title: 'Indus Appstore',
+      description: 'Official release on Made-in-India marketplace',
+      badge: 'Indus Store ↗',
+      url: indus,
+      isDownload: false
+    });
+  }
+  if (play) {
+    distOptions.push({
+      type: 'playstore',
+      label: 'Play Store',
+      title: 'Google Play Store',
+      description: 'Verified release scanned by Google Play Protect',
+      badge: 'Google Play ↗',
+      url: play,
+      isDownload: false
+    });
+  }
+
+  let button2Markup = '';
+  if (distOptions.length === 1) {
+    const opt = distOptions[0];
+    if (opt.type === 'apk') {
+      const fileName = opt.url.split('/').pop() || `${item.id}-release.apk`;
+      button2Markup = `
+        <a 
+          href="${escapeHtml(opt.url)}" 
+          class="action-btn btn-distribution btn-apk-download"
+          download="${escapeHtml(fileName)}"
+          data-action-apk="${escapeHtml(item.title)}"
+          data-url="${escapeHtml(opt.url)}"
+          title="Direct APK"
+        >
+          <span class="btn-text-content">Direct APK</span>
+        </a>
+      `;
+    } else if (opt.type === 'indus') {
+      button2Markup = `
+        <a 
+          href="${escapeHtml(opt.url)}" 
+          class="action-btn btn-distribution btn-indus-store"
+          target="_blank"
+          rel="noopener noreferrer"
+          data-action-indus="${escapeHtml(item.title)}"
+          data-url="${escapeHtml(opt.url)}"
+          title="Indus Appstore"
+        >
+          <span class="btn-text-content">Indus Appstore</span>
+        </a>
+      `;
+    } else if (opt.type === 'playstore') {
+      button2Markup = `
+        <a 
+          href="${escapeHtml(opt.url)}" 
+          class="action-btn btn-distribution btn-play-store"
+          target="_blank"
+          rel="noopener noreferrer"
+          data-action-playstore="${escapeHtml(item.title)}"
+          data-url="${escapeHtml(opt.url)}"
+          title="Play Store"
+        >
+          <span class="btn-text-content">Play Store</span>
+        </a>
+      `;
+    }
+  } else if (distOptions.length > 1) {
+    button2Markup = `
+      <button 
+        type="button" 
+        class="action-btn btn-distribution btn-store-dropdown"
+        data-store-dropdown="${escapeHtml(item.id)}"
+        aria-haspopup="dialog"
+        aria-expanded="false"
+        title="Official Store ▾"
+      >
+        <span class="btn-text-content">Official Store ▾</span>
+      </button>
+    `;
+  }
+
+  // Layout container width logic
+  if (button1Markup && button2Markup) {
+    return `
+      <div class="dual-action-row">
+        ${button1Markup}
+        ${button2Markup}
+      </div>
+    `;
+  } else if (button1Markup) {
+    return `
+      <div class="single-action-row">
+        ${button1Markup}
+      </div>
+    `;
+  } else if (button2Markup) {
+    return `
+      <div class="single-action-row">
+        ${button2Markup}
+      </div>
+    `;
+  } else {
+    return '';
+  }
+}
+
+/**
+ * Open clean, accessible distribution modal/dropdown displaying only active options
+ */
+export function openDistributionModal(item) {
+  if (!item) return;
+
+  const options = [];
+  const apk = (item.apk_url || item.apkUrl || '').trim();
+  const indus = (item.indus_url || item.indusUrl || '').trim();
+  const play = (item.playstore_url || item.playstoreUrl || '').trim();
+
+  if (apk) {
+    const fileName = apk.split('/').pop() || `${item.id}-release.apk`;
+    options.push({
+      type: 'apk',
+      label: 'Direct APK',
+      title: 'Direct APK Download',
+      description: 'Air-gapped Android package file (.apk)',
+      badge: 'Direct Download ⬇',
+      url: apk,
+      isDownload: true,
+      fileName: fileName,
+      iconSvg: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>`,
+      themeClass: 'modal-opt-apk'
+    });
+  }
+
+  if (indus) {
+    options.push({
+      type: 'indus',
+      label: 'Indus Appstore',
+      title: 'Indus Appstore',
+      description: 'Official release on Made-in-India Android marketplace',
+      badge: 'Indus Store ↗',
+      url: indus,
+      isDownload: false,
+      iconSvg: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="m9 12 2 2 4-4"/></svg>`,
+      themeClass: 'modal-opt-indus'
+    });
+  }
+
+  if (play) {
+    options.push({
+      type: 'playstore',
+      label: 'Play Store',
+      title: 'Google Play Store',
+      description: 'Verified release scanned by Google Play Protect',
+      badge: 'Google Play ↗',
+      url: play,
+      isDownload: false,
+      iconSvg: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>`,
+      themeClass: 'modal-opt-play'
+    });
+  }
+
+  if (options.length === 0) return;
+
+  closeDistributionModal();
+
+  const backdrop = document.createElement('div');
+  backdrop.id = 'storeDistributionModal';
+  backdrop.className = 'store-modal-backdrop';
+  backdrop.setAttribute('role', 'dialog');
+  backdrop.setAttribute('aria-modal', 'true');
+  backdrop.setAttribute('aria-labelledby', 'distModalTitle');
+
+  backdrop.innerHTML = `
+    <div class="store-modal-card">
+      <div class="store-modal-header">
+        <div class="store-modal-header-text">
+          <div class="store-modal-kicker">OFFICIAL DISTRIBUTION CHANNELS</div>
+          <h3 id="distModalTitle" class="store-modal-title">${escapeHtml(item.title)}</h3>
+          <p class="store-modal-sub">${escapeHtml(item.version)} • ${escapeHtml(item.category)}</p>
+        </div>
+        <button type="button" class="store-modal-close" id="distModalCloseBtn" aria-label="Close distribution options">✕</button>
+      </div>
+
+      <div class="store-modal-body">
+        <div class="store-modal-prompt">Choose an official store or direct distribution channel:</div>
+        <div class="store-modal-options-list">
+          ${options.map(opt => `
+            <a 
+              href="${escapeHtml(opt.url)}" 
+              class="store-option-item ${opt.themeClass}"
+              ${opt.isDownload ? `download="${escapeHtml(opt.fileName)}"` : 'target="_blank" rel="noopener noreferrer"'}
+              data-modal-action="${opt.type}"
+            >
+              <div class="store-option-icon-box">
+                ${opt.iconSvg}
+              </div>
+              <div class="store-option-meta">
+                <div class="store-option-heading">
+                  <span class="store-option-name">${escapeHtml(opt.title)}</span>
+                  <span class="store-option-tag">${escapeHtml(opt.badge)}</span>
+                </div>
+                <div class="store-option-desc">${escapeHtml(opt.description)}</div>
+              </div>
+            </a>
+          `).join('')}
+        </div>
+      </div>
+
+      <div class="store-modal-footer">
+        <div class="store-modal-guarantee">
+          <span>🛡️ Verified zero-telemetry software build by TarkStudio</span>
+        </div>
+        <button type="button" class="store-modal-cancel-btn" id="distModalCancelBtn">Close</button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(backdrop);
+
+  const close = () => closeDistributionModal();
+  document.getElementById('distModalCloseBtn')?.addEventListener('click', close);
+  document.getElementById('distModalCancelBtn')?.addEventListener('click', close);
+  backdrop.addEventListener('click', (e) => {
+    if (e.target === backdrop) close();
+  });
+
+  backdrop.querySelectorAll('[data-modal-action]').forEach(optEl => {
+    optEl.addEventListener('click', () => {
+      const type = optEl.getAttribute('data-modal-action');
+      if (type === 'apk') {
+        showToast(`Starting direct APK download: ${item.title}`);
+      } else if (type === 'indus') {
+        showToast(`Opening Indus Appstore for ${item.title}...`);
+      } else if (type === 'playstore') {
+        showToast(`Opening Google Play Store for ${item.title}...`);
+      }
+      setTimeout(close, 250);
+    });
+  });
+
+  const handleKeydown = (e) => {
+    if (e.key === 'Escape') {
+      close();
+      document.removeEventListener('keydown', handleKeydown);
+    }
+  };
+  document.addEventListener('keydown', handleKeydown);
+}
+
+export function closeDistributionModal() {
+  const existing = document.getElementById('storeDistributionModal');
+  if (existing) {
+    existing.classList.add('store-modal-closing');
+    setTimeout(() => {
+      existing.remove();
+    }, 150);
+  }
+}
+
+/**
  * Generate HTML string for an individual project card
  */
 function renderCardMarkup(item) {
   const isLocked = item.status === 'locked';
-  const hasApk = Boolean(item.apkUrl) || item.type === 'apk';
-  const hasWeb = Boolean(item.webUrl) || item.type === 'website';
-  const hasBoth = Boolean(item.apkUrl) && Boolean(item.webUrl);
   const iconInfo = getProjectIcon(item);
 
   // Operational Mode Badge
@@ -352,76 +735,8 @@ function renderCardMarkup(item) {
     compactStatusPill = `<span class="mobile-status-pill badge-mode-online">🔄 Hybrid</span>`;
   }
 
-  // Action Buttons Generation with Dual Mobile/Desktop Text
-  let actionsMarkup = '';
-
-  if (isLocked) {
-    actionsMarkup = `
-      <div class="single-action-row">
-        <button class="action-btn btn-locked" disabled aria-disabled="true">
-          <span class="btn-text-mobile">🔒 Locked</span>
-          <span class="btn-text-desktop">🔒 Coming Soon</span>
-        </button>
-      </div>
-    `;
-  } else if (hasBoth) {
-    actionsMarkup = `
-      <div class="dual-action-row">
-        <a 
-          href="${item.webUrl}" 
-          class="action-btn btn-web-open"
-          target="_blank"
-          rel="noopener noreferrer"
-          data-action-web="${escapeHtml(item.title)}"
-          data-url="${item.webUrl}"
-        >
-          <span class="btn-text-mobile">Open ↗</span>
-          <span class="btn-text-desktop">🌐 Open Tool</span>
-        </a>
-        <a 
-          href="${item.apkUrl}" 
-          class="action-btn btn-apk-download"
-          download="${item.apkUrl.split('/').pop() || 'release.apk'}"
-          data-action-apk="${escapeHtml(item.title)}"
-          data-url="${item.apkUrl}"
-        >
-          <span class="btn-text-mobile">⬇ APK</span>
-          <span class="btn-text-desktop">⬇ APK</span>
-        </a>
-      </div>
-    `;
-  } else if (hasApk) {
-    actionsMarkup = `
-      <div class="single-action-row">
-        <a 
-          href="${item.apkUrl || '#'}" 
-          class="action-btn btn-apk-download"
-          download="${(item.apkUrl && item.apkUrl.split('/').pop()) || 'release.apk'}"
-          data-action-apk="${escapeHtml(item.title)}"
-          data-url="${item.apkUrl || ''}"
-        >
-          <span class="btn-text-mobile">⬇ APK</span>
-          <span class="btn-text-desktop">⬇ Download APK</span>
-        </a>
-      </div>
-    `;
-  } else if (hasWeb) {
-    actionsMarkup = `
-      <div class="single-action-row">
-        <a 
-          href="${item.webUrl || '#'}" 
-          class="action-btn btn-web-open"
-          target="_blank"
-          rel="noopener noreferrer"
-          data-action-web="${escapeHtml(item.title)}"
-          data-url="${item.webUrl || ''}"
-        >
-          <span class="btn-text-mobile">Open ↗</span>
-          <span class="btn-text-desktop">🌐 Open Tool</span>
-        </a>
-      </div>
-    `;
-  }
+  // Action Buttons Generation (Hybrid Logic)
+  const actionsMarkup = renderCardActionButtons(item);
 
   return `
     <article class="app-card h-full flex flex-col justify-between" id="card-${item.id}">

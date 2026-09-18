@@ -980,35 +980,84 @@ body {
   border: 1px solid rgba(244, 63, 94, 0.25);
 }
 
-/* APK Download Action */
-.btn-apk-download {
-  background: #0284c7;
-  color: #ffffff;
-  border-color: #0284c7;
+/* Hybrid Action Buttons */
+.btn-custom-action {
+  background: rgba(20, 184, 166, 0.12);
+  color: #2dd4bf;
+  border-color: rgba(20, 184, 166, 0.35);
 }
 
-.btn-apk-download:hover {
-  background: #0369a1;
-  border-color: #0369a1;
-}
-
-/* Web Tool Action */
-.btn-web-open {
+.btn-custom-action:hover {
   background: var(--accent-teal);
   color: #07090E;
   border-color: var(--accent-teal);
 }
 
-.btn-web-open:hover {
-  background: var(--accent-teal-hover);
-  border-color: var(--accent-teal-hover);
+.btn-apk-download {
+  background: rgba(14, 165, 233, 0.14);
+  color: #38bdf8;
+  border-color: rgba(14, 165, 233, 0.35);
+}
+
+.btn-apk-download:hover {
+  background: #0284c7;
+  color: #ffffff;
+  border-color: #0284c7;
+}
+
+.btn-indus-store {
+  background: rgba(249, 115, 22, 0.14);
+  color: #fb923c;
+  border-color: rgba(249, 115, 22, 0.35);
+}
+
+.btn-indus-store:hover {
+  background: #ea580c;
+  color: #ffffff;
+  border-color: #ea580c;
+}
+
+.btn-play-store {
+  background: rgba(16, 185, 129, 0.14);
+  color: #34d399;
+  border-color: rgba(16, 185, 129, 0.35);
+}
+
+.btn-play-store:hover {
+  background: #059669;
+  color: #ffffff;
+  border-color: #059669;
+}
+
+.btn-store-dropdown {
+  background: rgba(99, 102, 241, 0.14);
+  color: #a5b4fc;
+  border-color: rgba(99, 102, 241, 0.35);
+  cursor: pointer;
+}
+
+.btn-store-dropdown:hover {
+  background: #4f46e5;
+  color: #ffffff;
+  border-color: #4f46e5;
 }
 
 /* Dual Variant Styles (compact) */
+.dual-action-row .btn-custom-action {
+  background: #0f172a;
+  color: #2dd4bf;
+  border-color: rgba(20, 184, 166, 0.35);
+}
+
+.dual-action-row .btn-custom-action:hover {
+  background: #14b8a6;
+  color: #07090E;
+}
+
 .dual-action-row .btn-apk-download {
   background: #0f172a;
   color: #38bdf8;
-  border-color: #0284c7;
+  border-color: rgba(14, 165, 233, 0.35);
 }
 
 .dual-action-row .btn-apk-download:hover {
@@ -1016,15 +1065,299 @@ body {
   color: #ffffff;
 }
 
-.dual-action-row .btn-web-open {
+.dual-action-row .btn-indus-store {
   background: #0f172a;
-  color: #2dd4bf;
-  border-color: #14b8a6;
+  color: #fb923c;
+  border-color: rgba(249, 115, 22, 0.35);
 }
 
-.dual-action-row .btn-web-open:hover {
-  background: #14b8a6;
-  color: #07090E;
+.dual-action-row .btn-indus-store:hover {
+  background: #ea580c;
+  color: #ffffff;
+}
+
+.dual-action-row .btn-play-store {
+  background: #0f172a;
+  color: #34d399;
+  border-color: rgba(16, 185, 129, 0.35);
+}
+
+.dual-action-row .btn-play-store:hover {
+  background: #059669;
+  color: #ffffff;
+}
+
+.dual-action-row .btn-store-dropdown {
+  background: #0f172a;
+  color: #a5b4fc;
+  border-color: rgba(99, 102, 241, 0.35);
+}
+
+.dual-action-row .btn-store-dropdown:hover {
+  background: #4f46e5;
+  color: #ffffff;
+}
+
+.btn-text-content {
+  display: inline-block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+/* Store Distribution Modal */
+.store-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(5, 8, 14, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  opacity: 1;
+  animation: fadeInModal 0.2s ease-out;
+}
+
+.store-modal-backdrop.store-modal-closing {
+  opacity: 0;
+  transition: opacity 0.15s ease-out;
+}
+
+@keyframes fadeInModal {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.store-modal-card {
+  width: 100%;
+  max-width: 480px;
+  background: #0b0f19;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 20px 40px -8px rgba(0, 0, 0, 0.75), 0 0 24px rgba(20, 184, 166, 0.12);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: scaleInModal 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes scaleInModal {
+  from {
+    transform: scale(0.95) translateY(8px);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+}
+
+.store-modal-header {
+  padding: 1.25rem 1.5rem 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.store-modal-kicker {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--accent-teal);
+  text-transform: uppercase;
+  margin-bottom: 0.25rem;
+}
+
+.store-modal-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.3;
+  margin: 0;
+}
+
+.store-modal-sub {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin-top: 0.2rem;
+}
+
+.store-modal-close {
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--text-secondary);
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition);
+  flex-shrink: 0;
+}
+
+.store-modal-close:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+}
+
+.store-modal-body {
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.store-modal-prompt {
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+}
+
+.store-modal-options-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.store-option-item {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  padding: 0.875rem 1rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  color: inherit;
+  transition: var(--transition);
+  cursor: pointer;
+}
+
+.store-option-item:hover {
+  background: rgba(255, 255, 255, 0.07);
+  transform: translateY(-1px);
+}
+
+.store-option-icon-box {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.modal-opt-apk .store-option-icon-box {
+  background: rgba(14, 165, 233, 0.15);
+  color: #38bdf8;
+  border: 1px solid rgba(14, 165, 233, 0.3);
+}
+
+.modal-opt-apk:hover {
+  border-color: rgba(14, 165, 233, 0.5);
+  box-shadow: 0 4px 16px rgba(14, 165, 233, 0.15);
+}
+
+.modal-opt-indus .store-option-icon-box {
+  background: rgba(249, 115, 22, 0.15);
+  color: #fb923c;
+  border: 1px solid rgba(249, 115, 22, 0.3);
+}
+
+.modal-opt-indus:hover {
+  border-color: rgba(249, 115, 22, 0.5);
+  box-shadow: 0 4px 16px rgba(249, 115, 22, 0.15);
+}
+
+.modal-opt-play .store-option-icon-box {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.modal-opt-play:hover {
+  border-color: rgba(16, 185, 129, 0.5);
+  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.15);
+}
+
+.store-option-meta {
+  flex: 1;
+  min-width: 0;
+}
+
+.store-option-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.2rem;
+}
+
+.store-option-name {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.store-option-tag {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  padding: 0.15rem 0.45rem;
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.store-option-desc {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.store-modal-footer {
+  padding: 0.875rem 1.5rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.store-modal-guarantee {
+  font-size: 0.6875rem;
+  color: var(--text-muted);
+}
+
+.store-modal-cancel-btn {
+  padding: 0.45rem 0.95rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.store-modal-cancel-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
 }
 
 /* Locked / Disabled state */
