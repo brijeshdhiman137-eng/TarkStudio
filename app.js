@@ -5,52 +5,148 @@
 
 import { PROJECTS_DATA } from './projects-data.js';
 
+// Live Google Sheets Apps Script API Endpoint
+export const GOOGLE_SHEETS_API_URL = 'https://script.google.com/macros/s/AKfycbypkMwhAcNh1Mas_Jevf8mJoVeZOsHYfwllHHKR8PQWi-Cfd7-dnv0jtlSQGYxsxZb8/exec';
+
 // Application State
 let currentMode = 'all'; // 'all' | 'online' | 'offline'
 let currentType = 'all'; // 'all' | 'apk' | 'website'
 let searchQuery = '';
 
-// In-memory catalog list with fallback support
-let catalogData = (typeof PROJECTS_DATA !== 'undefined' && Array.isArray(PROJECTS_DATA) && PROJECTS_DATA.length > 0)
-  ? [...PROJECTS_DATA]
-  : ((typeof window !== 'undefined' && Array.isArray(window.PROJECTS_DATA) && window.PROJECTS_DATA.length > 0) ? [...window.PROJECTS_DATA] : []);
+// In-memory catalog list (populated dynamically from Google Sheet API)
+let catalogData = [];
+let isLoadingCatalog = false;
 
 /**
- * Ensures catalog data is loaded from memory or via relative fetch
+ * Normalize project record from Google Sheets or local fallbacks
  */
-export async function ensureCatalogData() {
-  if (catalogData && catalogData.length > 0) {
+export function normalizeProjectItem(item) {
+  if (!item) return null;
+  const id = String(item.id || '').trim().toLowerCase();
+
+  // Intelligent local asset fallbacks if URLs are empty in the Google Sheet
+  let apkUrl = (item.apkUrl && String(item.apkUrl).trim()) || '';
+  let webUrl = (item.webUrl && String(item.webUrl).trim()) || '';
+
+  if (!apkUrl) {
+    if (id === 'bagh-chal' || id === 'baghchal') apkUrl = 'downloads/baghchal-release.apk';
+    else if (id === 'flashdrop') apkUrl = 'downloads/flashdrop-release.apk';
+    else if (id === 'chota-hathi') apkUrl = 'downloads/chotahathi-release.apk';
+    else if (id === 'mental-math-academy') apkUrl = 'downloads/mental-math-release.apk';
+  }
+
+  if (!webUrl) {
+    if (id === 'bagh-chal' || id === 'baghchal') webUrl = 'games/bagh-chal/index.html';
+    else if (id === 'storeready') webUrl = 'tools/storeready/index.html';
+    else if (id === 'apex-monitor') webUrl = 'https://apex.tarkstudio.dev';
+  }
+
+  return {
+    id: id || 'item',
+    title: item.title || 'Untitled Application',
+    version: item.version || 'v1.0.0',
+    mode: (item.mode || 'offline').toLowerCase(),
+    type: (item.type || 'apk').toLowerCase(),
+    status: (item.status || 'active').toLowerCase(),
+    category: item.category || (item.type === 'apk' ? 'Android Utility' : 'Web Application'),
+    description: item.description || '',
+    badge: item.badge || '',
+    size: item.size || (item.type === 'apk' ? 'APK Package' : 'Web App'),
+    webUrl: webUrl,
+    apkUrl: apkUrl
+  };
+}
+
+/**
+ * Display clean loading skeleton in the product grid while fetching
+ */
+export function showGridSkeleton() {
+  const container = document.getElementById('appsGrid');
+  if (!container) return;
+
+  container.innerHTML = Array.from({ length: 6 }).map(() => `
+    <article class="app-card animate-pulse" style="min-height: 220px; display: flex; flex-direction: column; justify-content: space-between; border-color: rgba(255,255,255,0.06);">
+      <div>
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+          <div style="width: 2.5rem; height: 2.5rem; border-radius: 10px; background: rgba(255, 255, 255, 0.08);"></div>
+          <div style="width: 4.5rem; height: 1.25rem; border-radius: 9999px; background: rgba(255, 255, 255, 0.06);"></div>
+        </div>
+        <div style="height: 1.25rem; width: 65%; border-radius: 4px; background: rgba(255, 255, 255, 0.08); margin-bottom: 0.6rem;"></div>
+        <div style="display: flex; gap: 0.35rem; margin-bottom: 0.75rem;">
+          <div style="height: 1.1rem; width: 4.5rem; border-radius: 9999px; background: rgba(255, 255, 255, 0.05);"></div>
+          <div style="height: 1.1rem; width: 4rem; border-radius: 9999px; background: rgba(255, 255, 255, 0.05);"></div>
+        </div>
+        <div style="height: 0.75rem; width: 95%; border-radius: 3px; background: rgba(255, 255, 255, 0.04); margin-bottom: 0.4rem;"></div>
+        <div style="height: 0.75rem; width: 75%; border-radius: 3px; background: rgba(255, 255, 255, 0.04);"></div>
+      </div>
+      <div style="margin-top: 1.25rem; padding-top: 0.75rem; border-top: 1px solid rgba(255, 255, 255, 0.06);">
+        <div style="height: 2.25rem; width: 100%; border-radius: 8px; background: rgba(255, 255, 255, 0.06);"></div>
+      </div>
+    </article>
+  `).join('');
+}
+
+/**
+ * Ensures catalog data is loaded from Google Sheets Apps Script API or offline fallback
+ */
+export async function ensureCatalogData(forceRefresh = false) {
+  if (!forceRefresh && catalogData && catalogData.length > 0) {
     return catalogData;
   }
 
-  // 1. Try fetching from relative path ./apps.json
+  isLoadingCatalog = true;
+
+  // 1. Fetch live from Google Sheets Apps Script API (${API_URL}?tab=Apps)
+  try {
+    const res = await fetch(`${GOOGLE_SHEETS_API_URL}?tab=Apps`, { cache: 'no-cache' });
+    if (res.ok) {
+      const remoteData = await res.json();
+      if (Array.isArray(remoteData) && remoteData.length > 0) {
+        catalogData = remoteData.map(normalizeProjectItem).filter(Boolean);
+        isLoadingCatalog = false;
+        return catalogData;
+      }
+    }
+  } catch (err) {
+    console.warn('Google Sheets API request failed, falling back to local dataset:', err);
+  }
+
+  // 2. Resilient fallback: Try ./apps.json
   try {
     const res = await fetch('./apps.json');
     if (res.ok) {
-      const data = await res.json();
-      if (Array.isArray(data) && data.length > 0) {
-        catalogData = data;
+      const localData = await res.json();
+      if (Array.isArray(localData) && localData.length > 0) {
+        catalogData = localData.map(normalizeProjectItem).filter(Boolean);
+        isLoadingCatalog = false;
         return catalogData;
       }
     }
   } catch (e) {
-    // try products.json next
+    // Continue to next fallback
   }
 
-  // 2. Try fetching from relative path ./products.json
+  // 3. Fallback: Try ./products.json
   try {
     const res2 = await fetch('./products.json');
     if (res2.ok) {
-      const data2 = await res2.json();
-      if (Array.isArray(data2) && data2.length > 0) {
-        catalogData = data2;
+      const localData2 = await res2.json();
+      if (Array.isArray(localData2) && localData2.length > 0) {
+        catalogData = localData2.map(normalizeProjectItem).filter(Boolean);
+        isLoadingCatalog = false;
         return catalogData;
       }
     }
   } catch (e2) {
-    console.warn('Could not load products data from relative path ./products.json', e2);
+    // Continue
   }
 
+  // 4. In-memory PROJECTS_DATA fallback
+  if (typeof PROJECTS_DATA !== 'undefined' && Array.isArray(PROJECTS_DATA) && PROJECTS_DATA.length > 0) {
+    catalogData = PROJECTS_DATA.map(normalizeProjectItem).filter(Boolean);
+  }
+
+  isLoadingCatalog = false;
   return catalogData;
 }
 
@@ -138,59 +234,79 @@ export function renderGrid() {
 
 /**
  * Project Icon Provider
+ * Ensures 'bagh-chal' and all other tool IDs resolve to high-contrast, authentic SVGs
  */
-function getProjectIcon(item) {
-  const id = item.id || '';
+export function getProjectIcon(itemOrId) {
+  const id = ((typeof itemOrId === 'string' ? itemOrId : (itemOrId && itemOrId.id)) || '').toLowerCase().trim();
+
+  // Bagh-Chal (Ancient Himalayan Strategic Board Game)
+  if (id === 'bagh-chal' || id === 'baghchal' || id.includes('bagh') || id.includes('chal') || id.includes('tiger')) {
+    return {
+      bgClass: 'icon-theme-emerald',
+      color: '#34d399',
+      svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="card-svg-icon"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/><path d="M9 3v18"/><path d="M15 3v18"/><line x1="3" y1="3" x2="21" y2="21"/><line x1="21" y1="3" x2="3" y2="21"/></svg>`
+    };
+  }
+
   if (id === 'storeready') {
     return {
       bgClass: 'icon-theme-teal',
+      color: '#2dd4bf',
       svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="card-svg-icon"><path d="m16.5 9.4-9-5.19M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.29 7 12 12 20.71 7"/><line x1="12" y1="22" x2="12" y2="12"/></svg>`
     };
   }
+
   if (id === 'flashdrop') {
     return {
       bgClass: 'icon-theme-amber',
+      color: '#fbbf24',
       svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="card-svg-icon"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>`
     };
   }
+
   if (id === 'chota-hathi') {
     return {
       bgClass: 'icon-theme-sky',
+      color: '#38bdf8',
       svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="card-svg-icon"><rect width="20" height="12" x="2" y="6" rx="6"/><line x1="6" x2="10" y1="12" y2="12"/><line x1="8" x2="8" y1="10" y2="14"/><line x1="15" x2="15.01" y1="13" y2="13"/><line x1="18" x2="18.01" y1="11" y2="11"/></svg>`
     };
   }
+
   if (id === 'mental-math-academy') {
     return {
       bgClass: 'icon-theme-purple',
+      color: '#c084fc',
       svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="card-svg-icon"><rect width="16" height="20" x="4" y="2" rx="2"/><line x1="8" x2="16" y1="6" y2="6"/><line x1="16" x2="16" y1="14" y2="18"/><path d="M16 10h.01"/><path d="M12 10h.01"/><path d="M8 10h.01"/><path d="M12 14h.01"/><path d="M8 14h.01"/><path d="M12 18h.01"/><path d="M8 18h.01"/></svg>`
     };
   }
-  if (id === 'bagh-chal') {
-    return {
-      bgClass: 'icon-theme-emerald',
-      svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="card-svg-icon"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/><path d="M9 3v18"/><path d="M15 3v18"/></svg>`
-    };
-  }
+
   if (id === 'apex-monitor') {
     return {
       bgClass: 'icon-theme-cyan',
+      color: '#22d3ee',
       svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="card-svg-icon"><path d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.48 12H2"/></svg>`
     };
   }
+
   if (id === 'omni-relay-client') {
     return {
       bgClass: 'icon-theme-indigo',
+      color: '#818cf8',
       svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="card-svg-icon"><rect x="16" y="16" width="6" height="6" rx="1"/><rect x="2" y="16" width="6" height="6" rx="1"/><rect x="9" y="2" width="6" height="6" rx="1"/><path d="M5 16v-3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3"/><path d="M12 12V8"/></svg>`
     };
   }
+
   if (id === 'tark-vault-sync') {
     return {
       bgClass: 'icon-theme-rose',
+      color: '#fb7185',
       svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="card-svg-icon"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><rect width="8" height="5" x="8" y="11" rx="1"/><path d="M10 11V9a2 2 0 1 1 4 0v2"/></svg>`
     };
   }
+
   return {
     bgClass: 'icon-theme-teal',
+    color: '#2dd4bf',
     svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="card-svg-icon"><circle cx="12" cy="12" r="10"/><polygon points="12 6 12 12 16 14"/></svg>`
   };
 }
@@ -454,9 +570,10 @@ function escapeHtml(str) {
  * Initialize Portal and wire event handlers
  */
 export async function initPortal() {
-  await ensureCatalogData();
+  // Show clean loading skeleton immediately
+  showGridSkeleton();
 
-  // 1. Wire Operational Mode Switcher
+  // Wire interactive controls
   const modeBar = document.getElementById('modeFilterBar');
   if (modeBar) {
     modeBar.addEventListener('click', (e) => {
@@ -468,7 +585,6 @@ export async function initPortal() {
     });
   }
 
-  // 2. Wire Product Type Switcher
   const typeBar = document.getElementById('typeFilterBar');
   if (typeBar) {
     typeBar.addEventListener('click', (e) => {
@@ -480,7 +596,6 @@ export async function initPortal() {
     });
   }
 
-  // 3. Wire Search Input
   const searchInput = document.getElementById('searchInput');
   const searchClearBtn = document.getElementById('searchClearBtn');
 
@@ -504,7 +619,10 @@ export async function initPortal() {
     });
   }
 
-  // Initial render
+  // Fetch live catalog from Google Sheets API
+  await ensureCatalogData();
+
+  // Render grid with live data
   updateButtonStates();
   renderGrid();
 }
