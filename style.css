@@ -1114,6 +1114,17 @@ body {
   gap: 0.5rem;
 }
 
+.footer-link {
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: var(--transition);
+}
+
+.footer-link:hover {
+  color: var(--accent-teal);
+  text-decoration: underline;
+}
+
 /* Toast Notification */
 .toast-notice {
   position: fixed;
